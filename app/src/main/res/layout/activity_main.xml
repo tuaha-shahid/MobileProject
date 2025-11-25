@@ -44,16 +44,16 @@
     </androidx.cardview.widget.CardView>
 
     <!-- Add Button -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddMedicine"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_baseline_add_24"
-        android:layout_gravity="bottom|end"
-        android:layout_marginBottom="83dp"
-        android:layout_marginRight="23dp"
-        android:tint="@android:color/white"
-        app:backgroundTint="#57C1FF"/>
+<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+<!--        android:id="@+id/fabAddMedicine"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:src="@drawable/ic_baseline_add_24"-->
+<!--        android:layout_gravity="bottom|end"-->
+<!--        android:layout_marginBottom="83dp"-->
+<!--        android:layout_marginRight="23dp"-->
+<!--        android:tint="@android:color/white"-->
+<!--        app:backgroundTint="#57C1FF"/>-->
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
