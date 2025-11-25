@@ -56,14 +56,14 @@
 <!--        app:backgroundTint="#57C1FF"/>-->
 
     <!-- Bottom Navigation -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="65dp"
-        android:layout_gravity="bottom"
-        android:background="#1A000000"
-        app:itemIconTint="@android:color/white"
-        app:itemTextColor="@android:color/white"
-        app:menu="@menu/bottom_nav_menu"/>
+<!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
+<!--        android:id="@+id/bottomNavigation"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="65dp"-->
+<!--        android:layout_gravity="bottom"-->
+<!--        android:background="#1A000000"-->
+<!--        app:itemIconTint="@android:color/white"-->
+<!--        app:itemTextColor="@android:color/white"-->
+<!--        app:menu="@menu/bottom_nav_menu"/>-->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
