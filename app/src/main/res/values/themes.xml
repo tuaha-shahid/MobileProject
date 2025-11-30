@@ -3,6 +3,9 @@
     <style name="Base.Theme.MedicineTime" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+            <item name="titleTextColor">?attr/colorOnSurface</item>
+            <item name="android:textColor">?attr/colorOnSurface</item>
+
     </style>
 
     <style name="Theme.MedicineTime" parent="Base.Theme.MedicineTime" />

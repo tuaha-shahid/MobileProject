@@ -1,69 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mainRoot"
     android:layout_width="match_parent"
+    android:id="@+id/mainRoot"
     android:layout_height="match_parent"
     android:background="@drawable/home_bg"
     tools:context=".MainActivity">
 
-    <!-- App Bar -->
-    <com.google.android.material.appbar.AppBarLayout
+    <!-- TOP BAR -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="#1A000000"
+        app:title="Medicine Time"
+        app:titleTextColor="@android:color/white"
+        app:menu="@menu/top_app_bar_menu"
+        app:layout_constraintTop_toTopOf="parent"/>
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/topAppBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#1A000000"
-            android:elevation="6dp"
-            app:title="Medicine Time"
-            app:titleTextColor="@android:color/white"
-            app:menu="@menu/top_app_bar_menu"/>
-    </com.google.android.material.appbar.AppBarLayout>
+<!--    -->
 
-    <!-- White Card Background -->
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="16dp"
-        android:radius="16dp"
-        app:cardElevation="6dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:layout_marginTop="85dp"
-        android:layout_marginBottom="80dp">
+    <!-- FLOATING ACTION BUTTON -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/medicineRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="12dp"/>
-    </androidx.cardview.widget.CardView>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_baseline_add_24"
+        android:tint="@android:color/white"
+        app:backgroundTint="#57C1FF"
+        android:id="@+id/add_medicines"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="26dp"
+        android:layout_marginBottom="26dp"/>
 
-    <!-- Add Button -->
-<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-<!--        android:id="@+id/fabAddMedicine"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:src="@drawable/ic_baseline_add_24"-->
-<!--        android:layout_gravity="bottom|end"-->
-<!--        android:layout_marginBottom="83dp"-->
-<!--        android:layout_marginRight="23dp"-->
-<!--        android:tint="@android:color/white"-->
-<!--        app:backgroundTint="#57C1FF"/>-->
+    <!-- STICKY BOTTOM NAVIGATION -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#1A000000"
+        android:padding="0dp"
+        app:paddingBottomSystemWindowInsets="true"
+        app:itemIconTint="@android:color/white"
+        app:itemTextColor="@android:color/white"
+        app:menu="@menu/bottom_nav_menu"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Bottom Navigation -->
-<!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
-<!--        android:id="@+id/bottomNavigation"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="65dp"-->
-<!--        android:layout_gravity="bottom"-->
-<!--        android:background="#1A000000"-->
-<!--        app:itemIconTint="@android:color/white"-->
-<!--        app:itemTextColor="@android:color/white"-->
-<!--        app:menu="@menu/bottom_nav_menu"/>-->
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
