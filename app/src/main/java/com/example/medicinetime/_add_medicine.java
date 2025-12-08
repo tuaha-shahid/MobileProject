@@ -1,79 +1,106 @@
+
 package com.example.medicinetime;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
 public class _add_medicine extends AppCompatActivity {
 
     TextInputEditText inputName, inputDosage;
-    MaterialButton btnTime, btnStart, btnEnd, btnSave;
+    MaterialButton btnTime, btnStartDate, btnEndDate, btnSave;
 
     FirebaseFirestore db;
     FirebaseAuth auth;
 
-    String selectedTime = "", startDate = "", endDate = "";
+    // Start Date
+    int year = -1, month = -1, day = -1;
+
+    // End Date
+    int endYear = -1, endMonth = -1, endDay = -1;
+
+    // Time
+    int hour = -1, minute = -1;
+
+    // Edit Mode variables
+    boolean isEdit = false;
+    String docId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_medicine);
 
-        // Firebase
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
-        // Views
         inputName = findViewById(R.id.inputMedicineName);
         inputDosage = findViewById(R.id.inputDosage);
+
         btnTime = findViewById(R.id.btnSelectTime);
-        btnStart = findViewById(R.id.btnStartDate);
-        btnEnd = findViewById(R.id.btnEndDate);
+        btnStartDate = findViewById(R.id.btnStartDate);
+        btnEndDate = findViewById(R.id.btnEndDate);
         btnSave = findViewById(R.id.btnSaveMedicine);
 
         MaterialToolbar toolbar = findViewById(R.id.topBar);
         toolbar.setNavigationOnClickListener(v -> finish());
 
-        // Status bar padding fix
-        View root = findViewById(R.id.addMedicine);
-        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+        // FIX SYSTEM INSETS
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.addMedicine), (v, insets) -> {
+            Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(sys.left, sys.top, sys.right, 0);
             return insets;
         });
 
-        // TIME Picker
+        // ---------------------------------------------
+        //      CHECK IF USER IS EDITING MEDICINE
+        // ---------------------------------------------
+        isEdit = getIntent().getBooleanExtra("edit", false);
+        docId = getIntent().getStringExtra("id");
+
+        if (isEdit) {
+            loadExistingData();
+        }
+
+        // ---------------------------------------------
+        //              PICK TIME
+        // ---------------------------------------------
         btnTime.setOnClickListener(v -> {
             MaterialTimePicker picker = new MaterialTimePicker.Builder()
-                    .setHour(9)
-                    .setMinute(0)
-                    .setTitleText("Select Reminder Time")
+                    .setTitleText("Select Time")
+                    .setHour(hour == -1 ? 9 : hour)
+                    .setMinute(minute == -1 ? 0 : minute)
                     .build();
 
             picker.show(getSupportFragmentManager(), "TIME_PICKER");
 
             picker.addOnPositiveButtonClickListener(view -> {
-                selectedTime = picker.getHour() + ":" + picker.getMinute();
-                btnTime.setText(selectedTime);
+                hour = picker.getHour();
+                minute = picker.getMinute();
+                btnTime.setText(String.format("%02d:%02d", hour, minute));
             });
         });
 
-        // START DATE PICKER
-        btnStart.setOnClickListener(v -> {
+        // ---------------------------------------------
+        //          PICK START DATE
+        // ---------------------------------------------
+        btnStartDate.setOnClickListener(v -> {
             MaterialDatePicker<Long> datePicker =
                     MaterialDatePicker.Builder.datePicker()
                             .setTitleText("Select Start Date")
@@ -82,71 +109,153 @@ public class _add_medicine extends AppCompatActivity {
             datePicker.show(getSupportFragmentManager(), "START_DATE");
 
             datePicker.addOnPositiveButtonClickListener(selection -> {
-                startDate = datePicker.getHeaderText();
-                btnStart.setText(startDate);
+                Calendar c = Calendar.getInstance();
+                c.setTimeInMillis(selection);
+
+                year = c.get(Calendar.YEAR);
+                month = c.get(Calendar.MONTH) + 1;
+                day = c.get(Calendar.DAY_OF_MONTH);
+
+                btnStartDate.setText(day + "/" + month + "/" + year);
             });
         });
 
-        // END DATE PICKER
-        btnEnd.setOnClickListener(v -> {
-            MaterialDatePicker<Long> datePicker =
+        // ---------------------------------------------
+        //            PICK END DATE
+        // ---------------------------------------------
+        btnEndDate.setOnClickListener(v -> {
+            MaterialDatePicker<Long> endPicker =
                     MaterialDatePicker.Builder.datePicker()
                             .setTitleText("Select End Date")
                             .build();
 
-            datePicker.show(getSupportFragmentManager(), "END_DATE");
+            endPicker.show(getSupportFragmentManager(), "END_DATE");
 
-            datePicker.addOnPositiveButtonClickListener(selection -> {
-                endDate = datePicker.getHeaderText();
-                btnEnd.setText(endDate);
+            endPicker.addOnPositiveButtonClickListener(selection -> {
+                Calendar c = Calendar.getInstance();
+                c.setTimeInMillis(selection);
+
+                endYear = c.get(Calendar.YEAR);
+                endMonth = c.get(Calendar.MONTH) + 1;
+                endDay = c.get(Calendar.DAY_OF_MONTH);
+
+                btnEndDate.setText(endDay + "/" + endMonth + "/" + endYear);
             });
         });
 
-        // SAVE MEDICINE
+        // SAVE / UPDATE BUTTON
         btnSave.setOnClickListener(v -> saveMedicine());
     }
 
+    // ----------------------------------------------------
+    //       PREFILL DATA WHEN EDITING
+    // ----------------------------------------------------
+    private void loadExistingData() {
+
+        inputName.setText(getIntent().getStringExtra("name"));
+        inputDosage.setText(getIntent().getStringExtra("dosage"));
+
+        // time
+        hour = getIntent().getIntExtra("hour", -1);
+        minute = getIntent().getIntExtra("minute", -1);
+        if (hour != -1)
+            btnTime.setText(String.format("%02d:%02d", hour, minute));
+
+        // start date
+        day = getIntent().getIntExtra("startDay", -1);
+        month = getIntent().getIntExtra("startMonth", -1);
+        year = getIntent().getIntExtra("startYear", -1);
+        if (day != -1)
+            btnStartDate.setText(day + "/" + month + "/" + year);
+
+        // end date
+        endDay = getIntent().getIntExtra("endDay", -1);
+        endMonth = getIntent().getIntExtra("endMonth", -1);
+        endYear = getIntent().getIntExtra("endYear", -1);
+        if (endDay != -1)
+            btnEndDate.setText(endDay + "/" + endMonth + "/" + endYear);
+
+        btnSave.setText("Update Medicine");
+    }
+
+    // ----------------------------------------------------
+    //     SAVE OR UPDATE MEDICINE IN FIRESTORE
+    // ----------------------------------------------------
     private void saveMedicine() {
 
-        String name = inputName.getText().toString().trim();
-        String dosage = inputDosage.getText().toString().trim();
-
-        // Validation
-        if (name.isEmpty()) {
+        // VALIDATION
+        if (inputName.getText().toString().trim().isEmpty()) {
             inputName.setError("Required");
             return;
         }
-        if (dosage.isEmpty()) {
+
+        if (inputDosage.getText().toString().trim().isEmpty()) {
             inputDosage.setError("Required");
             return;
         }
-        if (selectedTime.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
-            Toast.makeText(this, "Please select all fields", Toast.LENGTH_SHORT).show();
+
+        if (hour == -1 || minute == -1) {
+            Toast.makeText(this, "Please select a time", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Get current logged-in user UID
-        String userId = auth.getCurrentUser().getUid();
+        if (day == -1) {
+            Toast.makeText(this, "Please select start date", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // Create data map
-        Map<String, Object> medicine = new HashMap<>();
-        medicine.put("name", name);
-        medicine.put("dosage", dosage);
-        medicine.put("time", selectedTime);
-        medicine.put("startDate", startDate);
-        medicine.put("endDate", endDate);
+        if (endDay == -1) {
+            Toast.makeText(this, "Please select end date", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // Save in Firestore inside user's folder
-        db.collection("Medicines")
-                .document(userId)
-                .collection("UserMedicines")
-                .add(medicine)
-                .addOnSuccessListener(doc -> {
-                    Toast.makeText(this, "Medicine Saved Successfully!", Toast.LENGTH_SHORT).show();
-                    finish();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
+        String uid = auth.getCurrentUser().getUid();
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("name", inputName.getText().toString().trim());
+        data.put("dosage", inputDosage.getText().toString().trim());
+        data.put("startDay", day);
+        data.put("startMonth", month);
+        data.put("startYear", year);
+        data.put("endDay", endDay);
+        data.put("endMonth", endMonth);
+        data.put("endYear", endYear);
+        data.put("hour", hour);
+        data.put("minute", minute);
+
+        // -------------------------------------
+        //            UPDATE MODE
+        // -------------------------------------
+        if (isEdit) {
+            db.collection("Users")
+                    .document(uid)
+                    .collection("Medicines")
+                    .document(docId)
+                    .update(data)
+                    .addOnSuccessListener(a -> {
+                        Toast.makeText(this, "Updated Successfully!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
+        }
+        // -------------------------------------
+        //              ADD MODE
+        // -------------------------------------
+        else {
+            db.collection("Users")
+                    .document(uid)
+                    .collection("Medicines")
+                    .add(data)
+                    .addOnSuccessListener(docRef -> {
+                        docRef.update("id", docRef.getId());
+                        Toast.makeText(this, "Saved Successfully!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
+        }
     }
 }

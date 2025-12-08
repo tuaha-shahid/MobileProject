@@ -1,33 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    android:padding="16dp"
-    android:radius="16dp"
-    android:elevation="6dp">
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp"
+    android:padding="12dp">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="6dp"
+        android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/medName"
-            android:text="Medicine Name"
-            android:textSize="20dp"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        <!-- ICON -->
+        <ImageView
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="2dp"
+            android:src="@drawable/ic_pill"
+            android:background="@drawable/rounded_icon_bg"
+            android:padding="10dp" />
 
+        <!-- TEXT AREA -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:id="@+id/medName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Medicine Name"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/medDosage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dosage: 1 Tablet"
+                android:textSize="14sp"
+                android:textColor="#555555"
+                android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/medDates"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start: DD/MM/YYYY | End: DD/MM/YYYY"
+                android:textSize="13sp"
+                android:textColor="#777777"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- TIME BADGE -->
         <TextView
             android:id="@+id/medTime"
-            android:text="07:30"
-            android:textSize="16dp"
-            android:textColor="#444444"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="07:30"
+            android:padding="8dp"
+            android:background="@drawable/time_badge"
+            android:textColor="#ffffff"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="8dp" />
+
+        <!-- EDIT ICON -->
+        <ImageView
+            android:id="@+id/btnEdit"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_edit"
+            android:layout_marginEnd="6dp" />
+
+        <!-- DELETE ICON -->
+        <ImageView
+            android:id="@+id/btnDelete"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_delete" />
 
     </LinearLayout>
 

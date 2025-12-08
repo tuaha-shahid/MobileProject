@@ -1,14 +1,17 @@
-package com.example.medicinetime;
+
+        package com.example.medicinetime;
 
 import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -39,6 +42,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // 🔵 Ask for Exact Alarm Permission (Android 12+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            if (am != null && !am.canScheduleExactAlarms()) {
+                Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                startActivity(intent);
+                return;
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                }, 101);
+            }
+        }
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
@@ -48,6 +69,19 @@ public class MainActivity extends AppCompatActivity {
         firestore = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
+        // 🔵 Create Notification Channel
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                requestPermissions(
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        101
+                );
+            }
+        }
+
+
         recyclerView = findViewById(R.id.recyclerMedicine);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -56,18 +90,18 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(sys.left, sys.top, sys.right, 0);
             return insets;
         });
 
         AddMedicine.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, _add_medicine.class);
-            startActivity(intent);
+            startActivity(new Intent(MainActivity.this, _add_medicine.class));
         });
 
         loadMedicines();
     }
+
 
     private void loadMedicines() {
         String uid = auth.getUid();
@@ -77,31 +111,36 @@ public class MainActivity extends AppCompatActivity {
                 .document(uid)
                 .collection("Medicines")
                 .addSnapshotListener((value, error) -> {
-                    if (error != null) {
-                        Toast.makeText(MainActivity.this, "Error loading medicines", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+
+                    if (error != null || value == null) return;
 
                     list.clear();
-                    for (DocumentSnapshot snapshot : value.getDocuments()) {
-                        MedicineModel model = snapshot.toObject(MedicineModel.class);
-                        model.id = snapshot.getId();
+
+                    for (DocumentSnapshot snap : value.getDocuments()) {
+                        MedicineModel model = snap.toObject(MedicineModel.class);
+                        if (model == null) continue;
+
+                        model.id = snap.getId();
                         list.add(model);
 
-                        setAlarmForMedicine(model);
+                        scheduleAlarm(model);
                     }
 
                     adapter.notifyDataSetChanged();
                 });
     }
 
-    private void setAlarmForMedicine(MedicineModel model) {
+
+    private void scheduleAlarm(MedicineModel model) {
+
         Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, model.startYear);
+        calendar.set(Calendar.MONTH, model.startMonth - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, model.startDay);
         calendar.set(Calendar.HOUR_OF_DAY, model.hour);
         calendar.set(Calendar.MINUTE, model.minute);
         calendar.set(Calendar.SECOND, 0);
 
-        // if time passed, schedule for the next day
         if (calendar.before(Calendar.getInstance())) {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
@@ -118,10 +157,14 @@ public class MainActivity extends AppCompatActivity {
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
-        alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                calendar.getTimeInMillis(),
-                pendingIntent
-        );
+        if (alarmManager != null) {
+            alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.getTimeInMillis(),
+                    pendingIntent
+            );
+        }
     }
+
 }
+
