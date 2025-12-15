@@ -1,3 +1,32 @@
 <resources>
+
     <string name="app_name">Medicine Time</string>
+    <string name="app_tagline">Your Daily Medicine Reminder</string>
+
+    <string name="about_us">About Us</string>
+    <string name="app_logo">Medicine Time App Logo</string>
+
+    <string name="about_app">About the App</string>
+    <string name="about_app_desc">
+        Medicine Time is an Android-based medication reminder application designed to help users take their medicines on time.
+        It provides timely notifications and an easy-to-use interface suitable for all age groups.
+    </string>
+
+    <string name="key_features">Key Features</string>
+    <string name="key_features_desc">
+        • Add and manage medicines
+        • Time-based reminders
+        • Easy-to-use dashboard
+        • Reliable notifications
+        • Secure data handling
+    </string>
+
+    <string name="developed_as">Developed As</string>
+    <string name="developed_as_desc">
+        Academic Project – Android Application Development
+    </string>
+
+    <string name="contact">Contact</string>
+    <string name="contact_email">Email: medicinetime.app@gmail.com</string>
+
 </resources>

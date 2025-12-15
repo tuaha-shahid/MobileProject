@@ -1,15 +1,13 @@
-
-        package com.example.medicinetime;
+package com.example.medicinetime;
 
 import android.app.AlarmManager;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +17,8 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -29,7 +29,7 @@ import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
-    FloatingActionButton AddMedicine;
+    FloatingActionButton addMedicine;
     RecyclerView recyclerView;
 
     FirebaseFirestore firestore;
@@ -40,47 +40,81 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        auth = FirebaseAuth.getInstance();
+
+        //  BLOCK UNAUTHORIZED ACCESS
+        if (auth.getCurrentUser() == null) {
+            startActivity(new Intent(MainActivity.this, activity_login.class));
+            finish();
+            return;
+        }
+
         super.onCreate(savedInstanceState);
-
-        // 🔵 Ask for Exact Alarm Permission (Android 12+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-            if (am != null && !am.canScheduleExactAlarms()) {
-                Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                startActivity(intent);
-                return;
-            }
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{
-                        android.Manifest.permission.POST_NOTIFICATIONS
-                }, 101);
-            }
-        }
-
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        MaterialToolbar topAppBar = findViewById(R.id.topAppBar);
+
+        topAppBar.setOnMenuItemClickListener(item -> {
+
+            if (item.getItemId() == R.id.menu_contact) {
+
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setData(android.net.Uri.parse("mailto:medicinetime.app@gmail.com"));
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Medicine Time App - Support");
+                emailIntent.putExtra(Intent.EXTRA_TEXT,
+                        "Hello Medicine Time Team,\n\nI need help with...\n\nThanks.");
+
+                try {
+                    startActivity(Intent.createChooser(emailIntent, "Send email using"));
+                } catch (Exception e) {
+                    Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            }
+
+            if (item.getItemId() == R.id.menu_logout) {
+
+                FirebaseAuth.getInstance().signOut();
+
+                Intent intent = new Intent(MainActivity.this, activity_login.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+                return true;
+            }
+
+            return false;
+        });
+
+
+        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
+
+        bottomNavigation.setOnItemSelectedListener(item -> {
+
+            if (item.getItemId() == R.id.nav_home) {
+                return true;
+            }
+
+            if (item.getItemId() == R.id.nav_add) {
+                startActivity(new Intent(MainActivity.this, _add_medicine.class));
+                return true;
+            }
+
+            if (item.getItemId() == R.id.nav_settings) {
+                startActivity(new Intent(MainActivity.this, activity_about_us.class));
+                return true;
+            }
+
+            return false;
+        });
+
+
         View root = findViewById(R.id.mainRoot);
-        AddMedicine = findViewById(R.id.add_medicines);
+        addMedicine = findViewById(R.id.add_medicines);
 
         firestore = FirebaseFirestore.getInstance();
-        auth = FirebaseAuth.getInstance();
-
-        // 🔵 Create Notification Channel
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                requestPermissions(
-                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
-                        101
-                );
-            }
-        }
-
 
         recyclerView = findViewById(R.id.recyclerMedicine);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -95,15 +129,15 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        AddMedicine.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, _add_medicine.class));
-        });
+        addMedicine.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, _add_medicine.class))
+        );
 
         loadMedicines();
     }
 
-
     private void loadMedicines() {
+
         String uid = auth.getUid();
         if (uid == null) return;
 
@@ -122,14 +156,12 @@ public class MainActivity extends AppCompatActivity {
 
                         model.id = snap.getId();
                         list.add(model);
-
                         scheduleAlarm(model);
                     }
 
                     adapter.notifyDataSetChanged();
                 });
     }
-
 
     private void scheduleAlarm(MedicineModel model) {
 
@@ -145,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
 
-        Intent intent = new Intent(MainActivity.this, MedicineAlarmReceiver.class);
+        Intent intent = new Intent(this, MedicineAlarmReceiver.class);
         intent.putExtra("medicineName", model.name);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
@@ -165,6 +197,4 @@ public class MainActivity extends AppCompatActivity {
             );
         }
     }
-
 }
-

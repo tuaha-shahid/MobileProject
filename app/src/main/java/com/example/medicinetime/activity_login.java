@@ -20,41 +20,44 @@ public class activity_login extends AppCompatActivity {
     MaterialButton loginButton;
     TextView goToSignup;
 
-    FirebaseAuth mAuth; // Firebase authentication object
+    FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
 
-        // Firebase Auth initialize
         mAuth = FirebaseAuth.getInstance();
 
-        // Views
+        // 🔐 AUTO LOGIN CHECK
+        if (mAuth.getCurrentUser() != null) {
+            startActivity(new Intent(activity_login.this, MainActivity.class));
+            finish();
+            return;
+        }
+
+        setContentView(R.layout.activity_login);
+
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
         loginButton = findViewById(R.id.loginButton);
         goToSignup = findViewById(R.id.goToSignup);
 
-        // Animations
         Animation fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         emailEditText.startAnimation(fadeIn);
         passwordEditText.startAnimation(fadeIn);
         loginButton.startAnimation(fadeIn);
         goToSignup.startAnimation(fadeIn);
 
-        // Login Button
         loginButton.setOnClickListener(v -> userLogin());
 
-        // Go to Signup
         goToSignup.setOnClickListener(v -> {
-            Intent intent = new Intent(activity_login.this, activity_signup.class);
-            startActivity(intent);
+            startActivity(new Intent(activity_login.this, activity_signup.class));
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
     }
 
     private void userLogin() {
+
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString();
 
@@ -71,7 +74,6 @@ public class activity_login extends AppCompatActivity {
         loginButton.setEnabled(false);
         loginButton.setText("Logging In...");
 
-        // Firebase Auth login
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
 
@@ -79,15 +81,16 @@ public class activity_login extends AppCompatActivity {
                     loginButton.setText("Login");
 
                     if (task.isSuccessful()) {
-                        Toast.makeText(activity_login.this, "Login Successful!", Toast.LENGTH_SHORT).show();
 
-                        // Go to Dashboard/Main Activity
+                        Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show();
+
                         Intent intent = new Intent(activity_login.this, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
-                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                         finish();
+
                     } else {
-                        Toast.makeText(activity_login.this,
+                        Toast.makeText(this,
                                 "Login Failed: " + task.getException().getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }

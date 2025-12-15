@@ -6,9 +6,8 @@
     >
 
     <item
-        android:id="@+id/menu_settings"
-        android:title="Settings"
-        android:icon="@drawable/ic_settings"
+        android:id="@+id/menu_contact"
+        android:title="Contact Us"
         app:showAsAction="never" />
 
 

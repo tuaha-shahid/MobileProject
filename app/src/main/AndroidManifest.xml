@@ -14,24 +14,35 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MedicineTime">
+        <activity
+            android:name=".activity_about_us"
+            android:exported="false" />
 
         <receiver
             android:name=".MedicineAlarmReceiver"
             android:exported="true" />
 
-        <activity android:name="._add_medicine" android:exported="false" />
-        <activity android:name=".activity_login" android:exported="false" />
-        <activity android:name=".activity_signup" android:exported="false" />
-
-        <activity android:name=".activity_splash" android:exported="true">
+        <activity
+            android:name="._add_medicine"
+            android:exported="false" />
+        <activity
+            android:name=".activity_login"
+            android:exported="false" />
+        <activity
+            android:name=".activity_signup"
+            android:exported="false" />
+        <activity
+            android:name=".activity_splash"
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".MainActivity" android:exported="false" />
-
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
