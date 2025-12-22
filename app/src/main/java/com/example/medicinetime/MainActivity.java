@@ -6,11 +6,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -29,6 +32,8 @@ import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int NOTIFICATION_PERMISSION_CODE = 101;
+
     FloatingActionButton addMedicine;
     RecyclerView recyclerView;
 
@@ -38,12 +43,14 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<MedicineModel> list;
     MedicineAdapter adapter;
 
+    private boolean exactAlarmChecked = false; // Prevent looping
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         auth = FirebaseAuth.getInstance();
 
-        //  BLOCK UNAUTHORIZED ACCESS
+        // Block unauthorized access
         if (auth.getCurrentUser() == null) {
             startActivity(new Intent(MainActivity.this, activity_login.class));
             finish();
@@ -51,8 +58,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        // Notification permission (Android 13+)
+        requestNotificationPermission();
 
         MaterialToolbar topAppBar = findViewById(R.id.topAppBar);
 
@@ -88,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
 
         bottomNavigation.setOnItemSelectedListener(item -> {
@@ -109,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
 
             return false;
         });
-
 
         View root = findViewById(R.id.mainRoot);
         addMedicine = findViewById(R.id.add_medicines);
@@ -136,6 +143,33 @@ public class MainActivity extends AppCompatActivity {
         loadMedicines();
     }
 
+    /** Request notification permission for Android 13+ **/
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == NOTIFICATION_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private void loadMedicines() {
 
         String uid = auth.getUid();
@@ -156,13 +190,33 @@ public class MainActivity extends AppCompatActivity {
 
                         model.id = snap.getId();
                         list.add(model);
-                        scheduleAlarm(model);
+
+                        // Only check exact alarm permission once
+                        if (!exactAlarmChecked) {
+                            checkAndScheduleAlarm(model);
+                            exactAlarmChecked = true;
+                        } else {
+                            scheduleAlarm(model);
+                        }
                     }
 
                     adapter.notifyDataSetChanged();
                 });
     }
 
+    /** Checks exact alarm permission (Android 12+) before scheduling **/
+    private void checkAndScheduleAlarm(MedicineModel model) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+            startActivity(intent);
+            return;
+        }
+        scheduleAlarm(model);
+    }
+
+    /** Schedule individual alarm **/
     private void scheduleAlarm(MedicineModel model) {
 
         Calendar calendar = Calendar.getInstance();
